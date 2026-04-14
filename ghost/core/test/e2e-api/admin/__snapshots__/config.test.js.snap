@@ -24,6 +24,7 @@ Object {
       "lexicalIndicators": true,
       "members": true,
       "membersForward": true,
+      "mercadoPago": true,
       "pictureImageFormats": true,
       "smarterCounts": true,
       "stripeAutomaticTax": true,

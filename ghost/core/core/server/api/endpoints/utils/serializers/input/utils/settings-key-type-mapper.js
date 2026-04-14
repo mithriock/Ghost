@@ -39,6 +39,8 @@ const keyTypeMapping = {
     stripe_connect_secret_key: 'string',
     stripe_connect_display_name: 'string',
     stripe_connect_account_id: 'string',
+    mercadopago_access_token: 'string',
+    mercadopago_public_key: 'string',
     notifications: 'array',
     navigation: 'array',
     secondary_navigation: 'array',

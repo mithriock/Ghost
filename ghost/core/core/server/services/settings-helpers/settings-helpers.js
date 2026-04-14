@@ -76,6 +76,27 @@ class SettingsHelpers {
         return this.getActiveStripeKeys() !== null;
     }
 
+    /**
+     * @returns {{accessToken: string, publicKey: string} | null}
+     */
+    getMercadoPagoKeys() {
+        const accessToken = this.settingsCache.get('mercadopago_access_token');
+        const publicKey = this.settingsCache.get('mercadopago_public_key');
+
+        if (!accessToken || !publicKey) {
+            return null;
+        }
+
+        return {
+            accessToken,
+            publicKey
+        };
+    }
+
+    isMercadoPagoConnected() {
+        return this.getMercadoPagoKeys() !== null;
+    }
+
     arePaidMembersEnabled() {
         return this.isMembersEnabled() && this.isStripeConnected();
     }

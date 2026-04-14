@@ -312,6 +312,7 @@ async function initServices() {
     debug('Begin: Services');
     const identityTokens = require('./server/services/identity-tokens');
     const stripe = require('./server/services/stripe');
+    const mercadopago = require('./server/services/mercadopago');
     const members = require('./server/services/members');
     const tiers = require('./server/services/tiers');
     const permissions = require('./server/services/permissions');
@@ -345,6 +346,7 @@ async function initServices() {
     // NOTE: Members service depends on these
     //       so they are initialized before it.
     await stripe.init();
+    await mercadopago.init();
 
     // NOTE: newsletter service and email service depend on email address service
     await emailAddressService.init(),

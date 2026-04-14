@@ -71,6 +71,10 @@ const features: Feature[] = [{
     title: 'Gift Subscriptions',
     description: 'Allow site visitors to purchase gift subscriptions for others',
     flag: 'giftSubscriptions'
+}, {
+    title: 'MercadoPago',
+    description: 'Enable MercadoPago as a payment provider for memberships and donations',
+    flag: 'mercadoPago'
 }];
 
 const AlphaFeatures: React.FC = () => {

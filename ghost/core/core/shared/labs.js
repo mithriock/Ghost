@@ -51,7 +51,8 @@ const PRIVATE_FEATURES = [
     'dripSequences',
     'pictureImageFormats',
     'smarterCounts',
-    'giftSubscriptions'
+    'giftSubscriptions',
+    'mercadoPago'
 ];
 
 module.exports.GA_KEYS = [...GA_FEATURES];

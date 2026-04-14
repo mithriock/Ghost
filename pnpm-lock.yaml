@@ -2326,6 +2326,9 @@ importers:
       mailgun.js:
         specifier: 10.4.0
         version: 10.4.0
+      mercadopago:
+        specifier: ^2.12.0
+        version: 2.12.0(encoding@0.1.13)
       metascraper:
         specifier: 5.45.15
         version: 5.45.15(@noble/hashes@1.8.0)
@@ -17682,6 +17685,9 @@ packages:
   meow@10.1.5:
     resolution: {integrity: sha512-/d+PQ4GKmGvM9Bee/DPa8z3mXs/pkvJE2KEThngVNOqtmljC6K7NMPxtc2JeZYTmpWb9k/TmxjeL18ez3h7vCw==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  mercadopago@2.12.0:
+    resolution: {integrity: sha512-9S+ZB/Fltd4BV9/U79r7U/+LrYJP844kxxvtAlVbbeVmhOE9rZt0YhPy1GXO3Yf4XyQaHwZ/SCyL2kebAicaLw==}
 
   merge-descriptors@1.0.3:
     resolution: {integrity: sha512-gaNvAS7TZ897/rVaZ0nMtAyxNyi/pdbjbAwUpFQpN70GqnVfOiXpeUUMKRBmzXaSQ8DdTX4/0ms62r2K+hE6mQ==}
@@ -43354,6 +43360,13 @@ snapshots:
       trim-newlines: 4.1.1
       type-fest: 1.4.0
       yargs-parser: 20.2.9
+
+  mercadopago@2.12.0(encoding@0.1.13):
+    dependencies:
+      node-fetch: 2.7.0(encoding@0.1.13)
+      uuid: 9.0.1
+    transitivePeerDependencies:
+      - encoding
 
   merge-descriptors@1.0.3: {}
 

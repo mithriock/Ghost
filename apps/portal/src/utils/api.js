@@ -608,6 +608,111 @@ function setupGhostApi({siteUrl = window.location.origin, apiUrl, apiKey}) {
             throw new Error('Failed to process gift checkout, please try again.');
         },
 
+        async checkoutPlanMercadoPago({tierId, cadence, cancelUrl, successUrl, email: customerEmail, name, metadata = {}} = {}) {
+            const siteUrlObj = new URL(siteUrl);
+            const identity = await api.member.identity();
+            const url = endpointFor({type: 'members', resource: 'create-mercadopago-checkout-session'});
+
+            if (!cancelUrl) {
+                const checkoutCancelUrl = window.location.href.startsWith(siteUrlObj.href) ? new URL(window.location.href) : new URL(siteUrl);
+                checkoutCancelUrl.searchParams.set('mercadopago', 'cancel');
+                cancelUrl = checkoutCancelUrl.href;
+            }
+
+            if (!successUrl) {
+                const checkoutSuccessUrl = new URL(siteUrl);
+                checkoutSuccessUrl.searchParams.set('mercadopago', 'success');
+                successUrl = checkoutSuccessUrl.href;
+            }
+
+            const body = {
+                identity,
+                tierId,
+                cadence: cadence || 'month',
+                type: 'subscription',
+                metadata: {
+                    name,
+                    requestSrc: 'portal',
+                    ...metadata
+                },
+                successUrl,
+                cancelUrl,
+                customerEmail
+            };
+
+            return makeRequest({
+                url,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            }).then(async function (res) {
+                if (!res.ok) {
+                    const errData = await res.json();
+                    const errMssg = errData?.errors?.[0]?.message || 'Failed to create MercadoPago checkout, please try again.';
+                    throw new Error(errMssg);
+                }
+                return res.json();
+            }).then(function (responseBody) {
+                if (responseBody.url) {
+                    return window.location.assign(responseBody.url);
+                }
+                throw new Error('Failed to create MercadoPago checkout session.');
+            });
+        },
+
+        async checkoutDonationMercadoPago({successUrl, cancelUrl, metadata = {}} = {}) {
+            const siteUrlObj = new URL(siteUrl);
+            const identity = await api.member.identity();
+            const url = endpointFor({type: 'members', resource: 'create-mercadopago-checkout-session'});
+
+            if (!successUrl) {
+                const checkoutSuccessUrl = new URL(siteUrl);
+                checkoutSuccessUrl.searchParams.set('mercadopago', 'success');
+                successUrl = checkoutSuccessUrl.href;
+            }
+
+            if (!cancelUrl) {
+                const checkoutCancelUrl = window.location.href.startsWith(siteUrlObj.href) ? new URL(window.location.href) : new URL(siteUrl);
+                checkoutCancelUrl.searchParams.set('mercadopago', 'cancel');
+                cancelUrl = checkoutCancelUrl.href;
+            }
+
+            const body = {
+                identity,
+                type: 'donation',
+                metadata: {
+                    ghost_donation: 'true',
+                    requestSrc: 'portal',
+                    ...metadata
+                },
+                successUrl,
+                cancelUrl
+            };
+
+            const response = await makeRequest({
+                url,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            const responseJson = await response.json();
+
+            if (!response.ok) {
+                const error = responseJson?.errors?.[0];
+                if (error) {
+                    throw error;
+                }
+                throw new Error('Unable to process MercadoPago payment. Please try again later.');
+            }
+
+            return responseJson;
+        },
+
         async checkoutDonation({successUrl, cancelUrl, metadata = {}, personalNote = ''} = {}) {
             const identity = await api.member.identity();
             const url = endpointFor({type: 'members', resource: 'create-stripe-checkout-session'});

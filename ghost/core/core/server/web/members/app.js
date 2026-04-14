@@ -4,6 +4,7 @@ const express = require('../../../shared/express');
 const sentry = require('../../../shared/sentry');
 const membersService = require('../../services/members');
 const stripeService = require('../../services/stripe');
+const mercadopagoService = require('../../services/mercadopago');
 const middleware = membersService.middleware;
 const shared = require('../shared');
 const errorHandler = require('@tryghost/mw-error-handler');
@@ -35,6 +36,7 @@ module.exports = function setupMembersApp() {
 
     // Webhooks
     membersApp.post('/webhooks/stripe', bodyParser.raw({type: 'application/json'}), stripeService.webhookController.handle.bind(stripeService.webhookController));
+    membersApp.post('/webhooks/mercadopago', bodyParser.json(), mercadopagoService.webhookController.handle.bind(mercadopagoService.webhookController));
 
     // Initializes members specific routes as well as assigns members specific data to the req/res objects
     // We don't want to add global bodyParser middleware as that interferes with stripe webhook requests on - `/webhooks`.
@@ -103,6 +105,9 @@ module.exports = function setupMembersApp() {
     );
     membersApp.post('/api/create-stripe-checkout-session', function lazyCreateCheckoutSessionMw(req, res, next) {
         return membersService.api.middleware.createCheckoutSession(req, res, next);
+    });
+    membersApp.post('/api/create-mercadopago-checkout-session', function lazyCreateMPCheckoutMw(req, res, next) {
+        return membersService.api.middleware.createMercadoPagoCheckoutSession(req, res, next);
     });
     membersApp.post('/api/create-stripe-update-session', function lazyCreateCheckoutSetupSessionMw(req, res, next) {
         return membersService.api.middleware.createCheckoutSetupSession(req, res, next);
@@ -174,7 +179,7 @@ module.exports = function setupMembersApp() {
     membersApp.use('/api', errorHandler.resourceNotFound);
     membersApp.use('/api', errorHandler.handleJSONResponse(sentry));
 
-    // Webhook error handling
+    // Webhook error handling (Stripe + MercadoPago)
     membersApp.use('/webhooks', errorHandler.resourceNotFound);
     membersApp.use('/webhooks', errorHandler.handleJSONResponse(sentry));
 

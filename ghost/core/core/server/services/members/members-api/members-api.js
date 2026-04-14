@@ -403,6 +403,10 @@ module.exports = function MembersAPI({
             body.json(),
             forwardError((req, res) => routerController.createCheckoutSession(req, res))
         ),
+        createMercadoPagoCheckoutSession: Router().use(
+            body.json(),
+            forwardError((req, res) => routerController.createMercadoPagoCheckoutSession(req, res))
+        ),
         createCheckoutSetupSession: Router().use(
             body.json(),
             forwardError((req, res) => routerController.createCheckoutSetupSession(req, res))

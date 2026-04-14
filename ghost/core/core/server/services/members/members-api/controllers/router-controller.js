@@ -769,6 +769,77 @@ module.exports = class RouterController {
         return res.end(JSON.stringify(response));
     }
 
+    async createMercadoPagoCheckoutSession(req, res) {
+        const mercadopagoService = require('../../../mercadopago');
+
+        if (!mercadopagoService.api.configured) {
+            throw new DisabledFeatureError({
+                message: tpl(messages.notConfigured)
+            });
+        }
+
+        if (!this.labsService.isSet('mercadoPago')) {
+            throw new DisabledFeatureError({
+                message: 'MercadoPago is not enabled'
+            });
+        }
+
+        const metadata = req.body.metadata ?? {};
+        const identity = req.body.identity;
+        let email = req.body.customerEmail;
+
+        if (identity) {
+            try {
+                const claims = await this._tokenService.decodeToken(identity);
+                email = claims?.sub || email;
+            } catch (err) {
+                logging.error(err);
+            }
+        }
+
+        await this._setAttributionMetadata(metadata);
+
+        const tierId = req.body.tierId;
+        const cadence = req.body.cadence || 'month';
+        const type = req.body.type || 'subscription';
+
+        let tier;
+        if (tierId) {
+            tier = await this._tiersService.api.read(tierId);
+        }
+
+        const items = [{
+            title: tier?.name || req.body.title || 'Membership',
+            quantity: 1,
+            unit_price: req.body.amount || (tier ? tier.getPrice(cadence) / 100 : 0),
+            currency_id: req.body.currency || tier?.currency?.toUpperCase() || 'ARS'
+        }];
+
+        const preference = await mercadopagoService.api.createPreference({
+            items,
+            payer: email ? {email} : undefined,
+            externalReference: tierId || undefined,
+            metadata: {
+                ...metadata,
+                tier_id: tierId,
+                cadence,
+                type,
+                ghost_donation: type === 'donation' ? 'true' : undefined
+            },
+            successUrl: req.body.successUrl,
+            failureUrl: req.body.cancelUrl,
+            pendingUrl: req.body.cancelUrl
+        });
+
+        const response = {
+            url: preference.init_point,
+            preferenceId: preference.id
+        };
+
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        return res.end(JSON.stringify(response));
+    }
+
     async sendMagicLink(req, res) {
         const {email, honeypot} = req.body;
         let {emailType} = req.body;

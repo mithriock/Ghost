@@ -25,6 +25,7 @@ import OffersContainerModal from '../../settings/growth/offers/offers-container-
 import PinturaModal from '../../settings/advanced/integrations/pintura-modal';
 import PortalModal from '../../settings/membership/portal/portal-modal';
 import SlackModal from '../../settings/advanced/integrations/slack-modal';
+import MercadoPagoConnectModal from '../../settings/membership/mercadopago/mercadopago-connect-modal';
 import StripeConnectModal from '../../settings/membership/stripe/stripe-connect-modal';
 import TestimonialsModal from '../../settings/growth/explore/testimonials-modal';
 import TierDetailModal from '../../settings/membership/tiers/tier-detail-modal';
@@ -49,6 +50,7 @@ const modals = {
     PinturaModal,
     PortalModal,
     SlackModal,
+    MercadoPagoConnectModal,
     StripeConnectModal,
     TestimonialsModal,
     TierDetailModal,

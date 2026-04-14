@@ -3,12 +3,38 @@ import React, {useState} from 'react';
 import TiersList from './tiers/tiers-list';
 import TopLevelGroup from '../../top-level-group';
 import clsx from 'clsx';
+import useFeatureFlag from '../../../hooks/use-feature-flag';
 import {Button, LimitModal, StripeButton, TabView, withErrorBoundary} from '@tryghost/admin-x-design-system';
 import {HostLimitError, useLimiter} from '../../../hooks/use-limiter';
 import {type Tier, getActiveTiers, getArchivedTiers, useBrowseTiers} from '@tryghost/admin-x-framework/api/tiers';
-import {checkStripeEnabled} from '@tryghost/admin-x-framework/api/settings';
+import {checkStripeEnabled, getSettingValues} from '@tryghost/admin-x-framework/api/settings';
 import {useGlobalData} from '../../providers/global-data-provider';
 import {useRouting} from '@tryghost/admin-x-framework/routing';
+
+const MercadoPagoConnectedButton: React.FC<{className?: string; onClick: () => void;}> = ({className, onClick}) => {
+    className = clsx(
+        'group flex shrink-0 items-center justify-center rounded border border-grey-300 px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-grey-900 transition-all hover:border-[#009EE3] dark:border-grey-900 dark:text-white',
+        className
+    );
+    return (
+        <button className={className} data-testid='mercadopago-connected' type='button' onClick={onClick}>
+            <span className="inline-flex size-2 rounded-full bg-green transition-all group-hover:bg-[#009EE3]"></span>
+            <span className='ml-2'>MercadoPago</span>
+        </button>
+    );
+};
+
+const MercadoPagoButton: React.FC<{className?: string; onClick: () => void;}> = ({className, onClick}) => {
+    className = clsx(
+        'flex shrink-0 items-center justify-center rounded border border-grey-300 px-3 py-1.5 text-sm font-semibold whitespace-nowrap text-grey-900 transition-all hover:border-[#009EE3] dark:border-grey-900 dark:text-white',
+        className
+    );
+    return (
+        <button className={className} data-testid='mercadopago-connect' type='button' onClick={onClick}>
+            <span className='text-[#009EE3]'>Connect MercadoPago</span>
+        </button>
+    );
+};
 
 const StripeConnectedButton: React.FC<{className?: string; onClick: () => void;}> = ({className, onClick}) => {
     className = clsx(
@@ -31,6 +57,13 @@ const Tiers: React.FC<{ keywords: string[] }> = ({keywords}) => {
     const archivedTiers = getArchivedTiers(tiers || []);
     const {updateRoute} = useRouting();
     const limiter = useLimiter();
+    const hasMercadoPago = useFeatureFlag('mercadoPago');
+    const [mercadopagoAccessToken] = getSettingValues(settings, ['mercadopago_access_token']);
+    const isMercadoPagoConnected = Boolean(mercadopagoAccessToken);
+
+    const openMercadoPagoModal = () => {
+        updateRoute('mercadopago-connect');
+    };
 
     const openConnectModal = async () => {
         // Allow Stripe despite the limit when it's already connected, so it's
@@ -77,10 +110,16 @@ const Tiers: React.FC<{ keywords: string[] }> = ({keywords}) => {
 
     return (
         <TopLevelGroup
-            customButtons={checkStripeEnabled(settings, config) ?
-                <StripeConnectedButton className='hidden tablet:!visible tablet:!block' onClick={openConnectModal} />
-                :
-                <StripeButton className='hidden tablet:!visible tablet:!block' onClick={openConnectModal}/>}
+            customButtons={<div className='flex gap-2'>
+                {checkStripeEnabled(settings, config) ?
+                    <StripeConnectedButton className='hidden tablet:!visible tablet:!block' onClick={openConnectModal} />
+                    :
+                    <StripeButton className='hidden tablet:!visible tablet:!block' onClick={openConnectModal}/>}
+                {hasMercadoPago && (isMercadoPagoConnected ?
+                    <MercadoPagoConnectedButton className='hidden tablet:!visible tablet:!block' onClick={openMercadoPagoModal} />
+                    :
+                    <MercadoPagoButton className='hidden tablet:!visible tablet:!block' onClick={openMercadoPagoModal} />)}
+            </div>}
             description='Set prices and paid member sign up settings'
             keywords={keywords}
             navid='tiers'
@@ -93,6 +132,10 @@ const Tiers: React.FC<{ keywords: string[] }> = ({keywords}) => {
                     :
                     <StripeButton onClick={openConnectModal}/>
                 }
+                {hasMercadoPago && (isMercadoPagoConnected ?
+                    <MercadoPagoConnectedButton className='mt-2 w-full' onClick={openMercadoPagoModal} />
+                    :
+                    <MercadoPagoButton className='mt-2 w-full' onClick={openMercadoPagoModal} />)}
             </div>
 
             {content}

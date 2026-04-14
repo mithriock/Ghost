@@ -313,6 +313,14 @@
             "defaultValue": null,
             "type": "string"
         },
+        "mercadopago_access_token": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "mercadopago_public_key": {
+            "defaultValue": null,
+            "type": "string"
+        },
         "members_monthly_price_id": {
             "defaultValue": null,
             "type": "string"

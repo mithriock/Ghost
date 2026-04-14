@@ -17,6 +17,7 @@ export const modalPaths: {[key: string]: ModalName} = {
     'tiers/add': 'TierDetailModal',
     'tiers/:id': 'TierDetailModal',
     'stripe-connect': 'StripeConnectModal',
+    'mercadopago-connect': 'MercadoPagoConnectModal',
     'newsletters/new': 'AddNewsletterModal',
     'newsletters/:id': 'NewsletterDetailModal',
     'history/view': 'HistoryModal',
