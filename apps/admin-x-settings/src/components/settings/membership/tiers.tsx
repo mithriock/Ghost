@@ -7,7 +7,7 @@ import useFeatureFlag from '../../../hooks/use-feature-flag';
 import {Button, LimitModal, StripeButton, TabView, withErrorBoundary} from '@tryghost/admin-x-design-system';
 import {HostLimitError, useLimiter} from '../../../hooks/use-limiter';
 import {type Tier, getActiveTiers, getArchivedTiers, useBrowseTiers} from '@tryghost/admin-x-framework/api/tiers';
-import {checkStripeEnabled, getSettingValues} from '@tryghost/admin-x-framework/api/settings';
+import {checkAnyPaymentEnabled, checkStripeEnabled, getSettingValues} from '@tryghost/admin-x-framework/api/settings';
 import {useGlobalData} from '../../providers/global-data-provider';
 import {useRouting} from '@tryghost/admin-x-framework/routing';
 
@@ -101,8 +101,10 @@ const Tiers: React.FC<{ keywords: string[] }> = ({keywords}) => {
         }
     ];
 
+    const anyPaymentEnabled = checkAnyPaymentEnabled(settings, config);
+
     let content;
-    if (checkStripeEnabled(settings, config)) {
+    if (anyPaymentEnabled) {
         content = <TabView selectedTab={selectedTab} tabs={tabs} onTabChange={setSelectedTab} />;
     } else {
         content = <TiersList tab='free-tier' tiers={activeTiers.filter(tier => tier.type === 'free')} />;

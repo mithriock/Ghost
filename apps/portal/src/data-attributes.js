@@ -164,7 +164,12 @@ export function planClickHandler({event, el, errorEl, siteUrl, site, member, cli
         }
         return res.text();
     }).then(function (identity) {
-        return fetch(`${siteUrl}/members/api/create-stripe-checkout-session/`, {
+        const useMercadoPago = !site?.is_stripe_enabled && site?.is_mercadopago_enabled;
+        const checkoutResource = useMercadoPago
+            ? 'create-mercadopago-checkout-session'
+            : 'create-stripe-checkout-session';
+
+        return fetch(`${siteUrl}/members/api/${checkoutResource}/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -178,7 +183,7 @@ export function planClickHandler({event, el, errorEl, siteUrl, site, member, cli
             })
         }).then(function (res) {
             if (!res.ok) {
-                throw new Error(t('Could not create Stripe checkout session'));
+                throw new Error(t('Could not create checkout session'));
             }
             return res.json();
         });

@@ -315,6 +315,8 @@ export function transformApiSiteData({site}) {
         });
 
         site.is_stripe_configured = !!site.paid_members_enabled;
+        site.is_stripe_enabled = !!site.stripe_enabled;
+        site.is_mercadopago_enabled = !!site.mercadopago_enabled;
 
         // Map tier visibility to old settings
         if (site.products?.[0]?.visibility) {

@@ -9,6 +9,19 @@ const labs = require('../../../shared/labs');
  * @prop {string} webhookHandlerUrl
  */
 
+/**
+ * MercadoPago requires HTTPS for all back_urls and notification_url
+ * since March 2025. In development (localhost with HTTP), we upgrade
+ * the protocol so the preference creation doesn't fail.
+ */
+function ensureHttps(url) {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'http:') {
+        parsed.protocol = 'https:';
+    }
+    return parsed.href;
+}
+
 module.exports = {
     /**
      * @param {object} deps
@@ -50,10 +63,10 @@ module.exports = {
 
         return {
             ...keys,
-            checkoutSuccessUrl: successUrl.href,
-            checkoutFailureUrl: failureUrl.href,
-            checkoutPendingUrl: pendingUrl.href,
-            webhookHandlerUrl: webhookHandlerUrl.href,
+            checkoutSuccessUrl: ensureHttps(successUrl.href),
+            checkoutFailureUrl: ensureHttps(failureUrl.href),
+            checkoutPendingUrl: ensureHttps(pendingUrl.href),
+            webhookHandlerUrl: ensureHttps(webhookHandlerUrl.href),
             webhookSecret,
             testEnv: config.get('env').startsWith('test')
         };

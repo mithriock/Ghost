@@ -4,7 +4,7 @@ import React, {useState} from 'react';
 import useSettingGroup from '../../../../hooks/use-setting-group';
 import {Button, Form, Heading, Modal, TextField, Toggle, showToast} from '@tryghost/admin-x-design-system';
 import {JSONError} from '@tryghost/admin-x-framework/errors';
-import {getSettingValues} from '@tryghost/admin-x-framework/api/settings';
+import {getSettingValues, useEditSettings} from '@tryghost/admin-x-framework/api/settings';
 import {useGlobalData} from '../../../providers/global-data-provider';
 import {useHandleError} from '@tryghost/admin-x-framework/hooks';
 import {useRouting} from '@tryghost/admin-x-framework/routing';
@@ -27,21 +27,44 @@ const Start: React.FC<{onNext?: () => void}> = ({onNext}) => {
             <div className='mt-6 mb-7'>
                 MercadoPago es el procesador de pagos líder en Latinoamérica. Si aún no tienes una cuenta, puedes <a className='underline' href="https://www.mercadopago.com" rel="noopener noreferrer" target="_blank">registrarte aquí</a>.
             </div>
-            <Button color='blue' label='Tengo una cuenta de MercadoPago →' onClick={onNext} />
+            <Button color='green' label='Tengo una cuenta de MercadoPago →' onClick={onNext} />
         </div>
     );
 };
 
 const ConnectForm: React.FC<{onClose: () => void}> = ({onClose}) => {
+    const {settings} = useGlobalData();
     const {localSettings, updateSetting, handleSave, saveState} = useSettingGroup();
     const [accessToken, publicKey] = getSettingValues(localSettings, ['mercadopago_access_token', 'mercadopago_public_key']);
     const [testMode, setTestMode] = useState(false);
     const handleError = useHandleError();
+    const {mutateAsync: editSettings} = useEditSettings();
 
     const onSubmit = async () => {
         try {
             showToast({title: 'Saving...', type: 'neutral'});
             await handleSave();
+
+            const currentPortalPlans = JSON.parse(
+                (getSettingValues(settings, ['portal_plans'])[0] as string) || '["free"]'
+            ) as string[];
+
+            const needsMonthly = !currentPortalPlans.includes('monthly');
+            const needsYearly = !currentPortalPlans.includes('yearly');
+
+            if (needsMonthly || needsYearly) {
+                const updatedPlans = [...currentPortalPlans];
+                if (needsMonthly) {
+                    updatedPlans.push('monthly');
+                }
+                if (needsYearly) {
+                    updatedPlans.push('yearly');
+                }
+                await editSettings([
+                    {key: 'portal_plans', value: JSON.stringify(updatedPlans)}
+                ]);
+            }
+
             showToast({title: 'MercadoPago connected', type: 'success'});
             onClose();
         } catch (e) {

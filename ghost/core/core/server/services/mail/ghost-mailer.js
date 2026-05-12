@@ -1,6 +1,8 @@
 // # Mail
 // Handles sending email for Ghost
 const _ = require('lodash');
+const fs = require('node:fs');
+const path = require('node:path');
 const config = require('../../../shared/config');
 const logging = require('@tryghost/logging');
 const errors = require('@tryghost/errors');
@@ -160,7 +162,44 @@ module.exports = class GhostMailer {
         return response;
     }
 
+    _logMailToFile(message) {
+        if (config.get('env') !== 'development') {
+            return;
+        }
+
+        try {
+            const appRoot = config.get('paths:appRoot');
+            const logFile = path.join(appRoot, 'mail.log');
+            const timestamp = new Date().toISOString();
+            const separator = '='.repeat(80);
+
+            const entry = [
+                separator,
+                `Date: ${timestamp}`,
+                `To: ${message.to}`,
+                `From: ${message.from}`,
+                `Subject: ${message.subject}`,
+                message.replyTo ? `Reply-To: ${message.replyTo}` : null,
+                '',
+                '--- HTML Body ---',
+                message.html || '(no HTML body)',
+                '',
+                message.text ? '--- Text Body ---' : null,
+                message.text || null,
+                separator,
+                ''
+            ].filter(line => line !== null).join('\n');
+
+            fs.appendFileSync(logFile, entry);
+            logging.info(`[MAIL] Email logged to ${logFile}`);
+        } catch (err) {
+            logging.warn(`[MAIL] Failed to log email to file: ${err.message}`);
+        }
+    }
+
     async sendMail(message) {
+        this._logMailToFile(message);
+
         const startTime = Date.now();
         try {
             const response = await this.transport.sendMail(message);

@@ -98,7 +98,7 @@ class SettingsHelpers {
     }
 
     arePaidMembersEnabled() {
-        return this.isMembersEnabled() && this.isStripeConnected();
+        return this.isMembersEnabled() && (this.isStripeConnected() || this.isMercadoPagoConnected());
     }
 
     getFirstpromoterId() {
@@ -192,7 +192,7 @@ class SettingsHelpers {
     }
 
     areDonationsEnabled() {
-        return this.isStripeConnected() && this.config.get('enableTipsAndDonations');
+        return (this.isStripeConnected() || this.isMercadoPagoConnected()) && this.config.get('enableTipsAndDonations');
     }
 
     createUnsubscribeUrl(uuid, options = {}) {

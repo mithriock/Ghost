@@ -55,19 +55,27 @@ class ProductRepository {
      * @param {any} deps.StripeProduct
      * @param {any} deps.StripePrice
      * @param {import('@tryghost/members-api/lib/services/stripe-api')} deps.stripeAPIService
+     * @param {object} [deps.settingsHelpers]
      */
     constructor({
         Product,
         Settings,
         StripeProduct,
         StripePrice,
-        stripeAPIService
+        stripeAPIService,
+        settingsHelpers
     }) {
         this._Product = Product;
         this._Settings = Settings;
         this._StripeProduct = StripeProduct;
         this._StripePrice = StripePrice;
         this._stripeAPIService = stripeAPIService;
+        this._settingsHelpers = settingsHelpers;
+    }
+
+    _isAnyPaymentConfigured() {
+        return this._stripeAPIService.configured ||
+            (this._settingsHelpers && this._settingsHelpers.isMercadoPagoConnected());
     }
 
     /**
@@ -164,9 +172,9 @@ class ProductRepository {
      * @returns {Promise<ProductModel>}
      **/
     async create(data, options = {}) {
-        if (!this._stripeAPIService.configured && (data.stripe_prices || data.monthly_price || data.yearly_price)) {
+        if (!this._isAnyPaymentConfigured() && (data.stripe_prices || data.monthly_price || data.yearly_price)) {
             throw new UpdateCollisionError({
-                message: 'The requested functionality requires Stripe to be configured. See https://ghost.org/integrations/stripe/',
+                message: 'The requested functionality requires a payment provider (Stripe or MercadoPago) to be configured.',
                 code: 'STRIPE_NOT_CONFIGURED'
             });
         }
@@ -338,9 +346,9 @@ class ProductRepository {
      * @returns {Promise<ProductModel>}
      **/
     async update(data, options = {}) {
-        if (!this._stripeAPIService.configured && (data.stripe_prices || data.monthly_price || data.yearly_price)) {
+        if (!this._isAnyPaymentConfigured() && (data.stripe_prices || data.monthly_price || data.yearly_price)) {
             throw new UpdateCollisionError({
-                message: 'The requested functionality requires Stripe to be configured. See https://ghost.org/integrations/stripe/',
+                message: 'The requested functionality requires a payment provider (Stripe or MercadoPago) to be configured.',
                 code: 'STRIPE_NOT_CONFIGURED'
             });
         }

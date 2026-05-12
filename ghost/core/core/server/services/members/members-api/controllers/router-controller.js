@@ -801,6 +801,10 @@ module.exports = class RouterController {
             tier = await this._tiersService.api.read(tierId);
         }
 
+        const siteUrl = this._urlUtils.getSiteUrl();
+        const successUrl = req.body.successUrl || `${siteUrl}?mercadopago=success`;
+        const cancelUrl = req.body.cancelUrl || `${siteUrl}?mercadopago=cancel`;
+
         const items = [{
             title: tier?.name || req.body.title || 'Membership',
             quantity: 1,
@@ -819,13 +823,17 @@ module.exports = class RouterController {
                 type,
                 ghost_donation: type === 'donation' ? 'true' : undefined
             },
-            successUrl: req.body.successUrl,
-            failureUrl: req.body.cancelUrl,
-            pendingUrl: req.body.cancelUrl
+            successUrl,
+            failureUrl: cancelUrl,
+            pendingUrl: cancelUrl
         });
 
+        const checkoutUrl = mercadopagoService.api.testEnv
+            ? (preference.sandbox_init_point || preference.init_point)
+            : preference.init_point;
+
         const response = {
-            url: preference.init_point,
+            url: checkoutUrl,
             preferenceId: preference.id
         };
 

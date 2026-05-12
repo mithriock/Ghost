@@ -114,3 +114,12 @@ export function checkStripeEnabled(settings: Setting[], config: Config) {
 
     return hasConnectKeys || hasDirectKeys;
 }
+
+export function checkMercadoPagoEnabled(settings: Setting[]) {
+    const hasSetting = (key: string) => settings.some(setting => setting.key === key && setting.value);
+    return hasSetting('mercadopago_access_token') && hasSetting('mercadopago_public_key');
+}
+
+export function checkAnyPaymentEnabled(settings: Setting[], config: Config) {
+    return checkStripeEnabled(settings, config) || checkMercadoPagoEnabled(settings);
+}

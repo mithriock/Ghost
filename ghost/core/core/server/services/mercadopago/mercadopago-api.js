@@ -49,6 +49,18 @@ module.exports = class MercadoPagoAPI {
     }
 
     /**
+     * MercadoPago rejects HTTP URLs since March 2025.
+     * @param {string|undefined} url
+     * @returns {string|undefined}
+     */
+    _ensureHttps(url) {
+        if (!url || !url.startsWith('http:')) {
+            return url;
+        }
+        return 'https:' + url.slice(5);
+    }
+
+    /**
      * Creates a Checkout Pro preference (equivalent to Stripe's checkout session).
      *
      * @param {object} options
@@ -69,18 +81,26 @@ module.exports = class MercadoPagoAPI {
         const {Preference} = require('mercadopago');
         const preference = new Preference(this._client);
 
+        const successUrl = this._ensureHttps(options.successUrl || this._config.checkoutSuccessUrl);
+        const failureUrl = this._ensureHttps(options.failureUrl || this._config.checkoutFailureUrl);
+        const pendingUrl = this._ensureHttps(options.pendingUrl || this._config.checkoutPendingUrl);
+        const notificationUrl = this._ensureHttps(options.notificationUrl || this._config.webhookHandlerUrl);
+
         const body = {
             items: options.items,
-            back_urls: {
-                success: options.successUrl || this._config.checkoutSuccessUrl,
-                failure: options.failureUrl || this._config.checkoutFailureUrl,
-                pending: options.pendingUrl || this._config.checkoutPendingUrl
-            },
-            auto_return: 'approved',
-            notification_url: options.notificationUrl || this._config.webhookHandlerUrl,
+            notification_url: notificationUrl,
             external_reference: options.externalReference || undefined,
             metadata: options.metadata || undefined
         };
+
+        if (successUrl && failureUrl && pendingUrl) {
+            body.back_urls = {
+                success: successUrl,
+                failure: failureUrl,
+                pending: pendingUrl
+            };
+            body.auto_return = 'approved';
+        }
 
         if (options.payer?.email) {
             body.payer = {email: options.payer.email};
@@ -127,7 +147,7 @@ module.exports = class MercadoPagoAPI {
                 currency_id: options.currencyId || 'ARS'
             },
             external_reference: options.externalReference || undefined,
-            back_url: options.backUrl || this._config.checkoutSuccessUrl,
+            back_url: this._ensureHttps(options.backUrl || this._config.checkoutSuccessUrl),
             status: 'pending'
         };
 

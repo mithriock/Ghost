@@ -96,7 +96,8 @@ module.exports = function MembersAPI({
         Settings,
         StripeProduct,
         StripePrice,
-        stripeAPIService
+        stripeAPIService,
+        settingsHelpers
     });
 
     const memberRepository = new MemberRepository({

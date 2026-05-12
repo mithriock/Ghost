@@ -3,6 +3,10 @@ import {chooseBestErrorMessage} from './utils/errors';
 import {createNotification, createPopupNotification, getMemberEmail, getMemberName, getProductCadenceFromPrice, removePortalLinkFromUrl, getRefDomain} from './utils/helpers';
 import {t} from './utils/i18n';
 
+function shouldUseMercadoPago(site) {
+    return !site?.is_stripe_enabled && site?.is_mercadopago_enabled;
+}
+
 function switchPage({data, state}) {
     return {
         page: data.page,
@@ -185,10 +189,13 @@ async function signup({data, state, api}) {
             const integrityToken = await api.member.getIntegrityToken();
             ({inboxLinks} = await api.member.sendMagicLink({emailType: 'signup', integrityToken, ...data, name}));
         } else {
-            if (tierId && cadence) {
-                await api.member.checkoutPlan({plan, tierId, cadence, email, name, newsletters, offerId});
-            } else {
+            if (!tierId || !cadence) {
                 ({tierId, cadence} = getProductCadenceFromPrice({site: state?.site, priceId: plan}));
+            }
+
+            if (shouldUseMercadoPago(state?.site)) {
+                await api.member.checkoutPlanMercadoPago({tierId, cadence, email, name});
+            } else {
                 await api.member.checkoutPlan({plan, tierId, cadence, email, name, newsletters, offerId});
             }
             return {
@@ -290,15 +297,26 @@ async function checkoutPlan({data, state, api}) {
         if (!tierId || !cadence) {
             ({tierId, cadence} = getProductCadenceFromPrice({site: state?.site, priceId: plan}));
         }
-        await api.member.checkoutPlan({
-            plan,
-            tierId,
-            cadence,
-            offerId,
-            metadata: {
-                checkoutType: 'upgrade'
-            }
-        });
+
+        if (shouldUseMercadoPago(state?.site)) {
+            await api.member.checkoutPlanMercadoPago({
+                tierId,
+                cadence,
+                metadata: {
+                    checkoutType: 'upgrade'
+                }
+            });
+        } else {
+            await api.member.checkoutPlan({
+                plan,
+                tierId,
+                cadence,
+                offerId,
+                metadata: {
+                    checkoutType: 'upgrade'
+                }
+            });
+        }
     } catch (e) {
         return {
             action: 'checkoutPlan:failed',
